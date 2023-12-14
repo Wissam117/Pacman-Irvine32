@@ -77,8 +77,7 @@ Enjoy playing Pacman in assembly language!
 Incorporate the MIT License text into a file named LICENSE in your repository. You can copy and paste the MIT License text from here.
 2 / 2
 User
-also include my name which is "Muhammad Wissam" and the fact that I am a Bachelo's of computer science student 
-ChatGPT
+also include my name which is "Muhammad Wissam" 
 
 Sure, here's an updated README.md with your name and your academic information:
 
