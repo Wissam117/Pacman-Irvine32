@@ -1,4 +1,5 @@
-
+;Developer : M. Wissam
+;github: Wissam117
 INCLUDE Irvine32.inc
 INCLUDE Macros.inc
 includelib winmm.lib
@@ -16,14 +17,27 @@ PlaySound PROTO, pszSound:PTR BYTE, hmod:DWORD, fdwSound:DWORD
 
 
 .data  
+
+comma BYTE ',', 0
+score2digits dd ?
+
+digit2 db ?
 ;buffer
+numu byte ?           
+  bufferu BYTE ?   
+  newlineu BYTE 0DH, 0AH, 0   
+
+BUFFER_SIZE=501
 buffer BYTE ?
+xb byte 11 dup(0)
 bufSize db ?
+
 errMsg BYTE "Cannot open file",0dh,0ah,0
 filename     BYTE "names.txt",0
+filename2    byte "scores.txt",0        
 fileHandle   DWORD ?	; handle to output file
 bytesWritten DWORD ?    	; number of bytes written
-BUFFER_SIZE=501
+
 
 ;sound feature
 sounder BYTE "sounder",0
@@ -44,6 +58,14 @@ lctoc=lightCyan+ (Cyan*16) ;Light Cyan Text On Cyan
 ctor= Cyan+(red*16) ;Cyan Text On Red
 rtog = red+(Gray*16);Red Text On Grey
 btoy=Blue+(yellow * 16) ;Blue Text On Yellow
+ 
+;filehandling
+
+name1 db ?
+sofname=12
+
+score1 db ?
+sofscore=10
 
 ;gob
 gob1 db 0
@@ -54,7 +76,7 @@ gob5 db 0
 gob6 db 0
 gobf db 0
 ;input vars
-name_i db 40 dup(?),0
+name_i dword 12
 
 ;file handling
 
@@ -68,7 +90,9 @@ temp byte ?
 
 ;score
 strScore BYTE "Your score is: ",0
-score BYTE 2
+sstrscore byte "Score is "
+score BYTE 0,0ah,0dh,0
+
 
 ;player position
 xPos BYTE 20
@@ -117,7 +141,7 @@ levelno db 1
 strlevelno db "Level :",0ah
 
 ;lives
-lives db 3
+lives db 2
 strlives db " Lives : "
 
 ;progressbar helpers
@@ -240,6 +264,33 @@ mwrite "Your final score was : "
 movzx eax,score
 call writedec
 mgotoxy 80,26
+comment @
+ mov edx, offset score
+    mov ax, [edx]
+    mov bl, 10
+    div bl
+    mov digit2, ah
+    cmp al, 0
+    je OneDigit
+    add al, 48
+   mov bufferu,al
+
+    OneDigit:
+    mov edx, offset score2digits
+    mov ah, digit2
+    add ah, 48
+    mov bufferu,ah
+  
+    akff:
+    @
+INVOKE CreateFile,
+	  ADDR filename2, GENERIC_WRITE, DO_NOT_SHARE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0
+	mov fileHandle,eax	
+	INVOKE SetFilePointer,
+	  fileHandle,0,0,FILE_END
+	INVOKE WriteFile, fileHandle, ADDR bufferu,5, ADDR bytesWritten, 0
+	INVOKE CloseHandle, fileHandle
+
 call exitproc
 
 game_over_screen endp
@@ -253,6 +304,35 @@ call settextcolor
 mgotoxy 40,15
 mwrite "YOU WON!! CONGRATULATIONS!!!"
 mgotoxy 80,26
+comment @
+ mov edx, offset score
+    mov ax, [edx]
+    mov bl, 10
+    div bl
+    mov digit2, ah
+    cmp al, 0
+    je OneDigit
+    add al, 48
+   mov bufferu,al
+
+    OneDigit:
+    mov edx, offset score2digits
+    mov ah, digit2
+    add ah, 48
+    mov bufferu,ah
+  
+    akff:
+    @
+INVOKE CreateFile,
+	  ADDR filename2, GENERIC_WRITE, DO_NOT_SHARE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0
+	mov fileHandle,eax	
+	INVOKE SetFilePointer,
+	  fileHandle,0,0,FILE_END
+	INVOKE WriteFile, fileHandle, ADDR bufferu,5, ADDR bytesWritten, 0
+	INVOKE CloseHandle, fileHandle
+
+
+
 call exitproc
 
 win_screen endp
@@ -663,12 +743,70 @@ cmp levelno,3
 je lvl3wallsu
 mutu:
 call UpdatePlayer
-dec yPos 
-call DrawPlayer
-mov eax,70
-call Delay
-   ; loop jumpLoop
-jmp gameLoop
+
+mov al, ypos
+cmp al, 17
+jl moveuu
+cmp al, 33
+je moveuuuu
+dec ypos
+jmp movenu
+
+
+moveuu:
+    mov al, ypos
+    cmp al, 15
+    jg moveuuu
+    cmp al,15
+    jl movetu
+
+    dec ypos
+    jmp movenu
+
+
+movetu:
+mov al,xpos
+cmp al,56
+jg movetuu
+
+dec ypos
+jmp movenu
+
+movetuu:
+mov al,xpos
+cmp al,60
+jl movenu
+dec ypos
+jmp movenu
+
+moveuuu:
+    mov al,xpos
+    cmp al,33
+    jl movenu
+    cmp al,84
+    jg movenu
+    dec ypos
+    jmp movenu
+
+    movenu:
+    call DrawPlayer
+    jmp gameLoop
+
+
+moveuuuu:
+    mov al, ypos
+    cmp al, 13
+    jg moveuuuuu
+    dec ypos
+    jmp movenu
+
+moveuuuuu:
+    mov al, ypos
+    cmp al, 16
+    jl moveuuu
+    dec ypos
+    jmp moveuuu
+
 
 moveDown:
 cmp levelno,1
@@ -679,10 +817,56 @@ cmp levelno,3
 je lvl3wallsd
 mutd:
 call UpdatePlayer
-inc yPos
-call DrawPlayer
-jmp gameLoop
 
+
+mov al, ypos
+cmp al, 14
+jg movedd
+
+mov al,xpos
+cmp al, 33
+jl movedddd
+cmp al,84
+jg movedddd
+inc ypos
+jmp movend
+
+
+movedd:
+    mov al, xpos
+    cmp al, 56
+    jg moveddd
+    inc ypos
+    jmp movend
+
+
+moveddd:
+    cmp al,60
+    jl movend
+    cmp al,84
+    jg movedddd
+    inc ypos
+    jmp movend
+
+    movend:
+    call DrawPlayer
+    jmp gameLoop
+
+
+movedddd:
+    mov al, ypos
+    cmp al, 12
+    jg moveddddd
+    inc ypos
+    jmp movend
+
+moveddddd:
+    mov al, ypos
+    cmp al, 16
+    jl movend
+    inc ypos
+    jmp movend
+    
 moveLeft:
 cmp levelno,1
 je lvl1wallsl
@@ -692,9 +876,48 @@ cmp levelno,3
 je lvl3wallsl
 mutl:
 call UpdatePlayer
-dec xPos
-call DrawPlayer
-jmp gameLoop
+
+mov al, xpos
+cmp al, 60
+je movell
+cmp al, 33
+je movellll
+dec xpos
+jmp movelll
+
+
+movell:
+    mov al, ypos
+    cmp al, 15
+    jg movelll
+    cmp al, 14
+    jl movelll
+    dec xpos
+    jmp movelll
+
+
+movelll:
+    call DrawPlayer
+    jmp gameLoop
+
+
+movellll:
+    mov al, ypos
+    cmp al, 13
+    jg movelllll
+    dec xpos
+    jmp movelll
+
+movelllll:
+    mov al, ypos
+    cmp al, 16
+    jl movelll
+    dec xpos
+    jmp movelll
+
+
+
+
 
 moveRight:
 cmp levelno,1
@@ -706,14 +929,48 @@ je lvl3wallsr
 mutr:
 call UpdatePlayer
 mov al, xpos
-cmp al, 57
+cmp al, 56
+je moverr
+cmp al, 84
+je moverrrr
+inc xpos
+jmp moverrr
 
-inc xPos
-call DrawPlayer
-jmp gameLoop
 
+moverr:
+    mov al, ypos
+    cmp al, 15
+    jg moverrr
+    cmp al, 14
+    jl moverrr
+    inc xpos
+    jmp moverrr
+
+
+moverrr:
+    call DrawPlayer
+    jmp gameLoop
+
+
+moverrrr:
+    mov al, ypos
+    cmp al, 13
+    jg moverrrrr
+    inc xpos
+    jmp moverrr
+
+moverrrrr:
+    mov al, ypos
+    cmp al, 16
+    jl moverrr
+    inc xpos
+    jmp moverrr
+
+
+
+    
 jmp gameLoop
- exitGame
+ exitGame:
 exit
 
 gameloopp endp
@@ -1264,11 +1521,36 @@ noLifeUpdate:
 ret
 UpdatelifeDisplay ENDP
 
+ConvertIntToStr PROC
+  push ebx                 
+  push ecx               
+  push edx                 
+
+  mov ecx, 10               
+  mov ebx, 0                
+
+convert_loop:
+  xor edx, edx             
+  div ecx                   
+  add dl, '0'              
+  dec edi                   
+  mov [edi], dl            
+
+  test eax, eax            
+  jnz convert_loop          
+
+  pop edx                   
+  pop ecx                   
+  pop ebx                   
+  ret
+
+ConvertIntToStr ENDP
+
 main PROC
 ;Game Start
 ;-----------------------------------------------------------------------------------------
 ;Starting Screens
-;comment @
+
 call Clrscr
 mov eax,ytog
 call SetTextColor
@@ -1297,16 +1579,20 @@ call progressbar_
  mGotoxy 30, 10
  mWrite "Developed By Muhammad Wissam"
  mGotoxy 50, 20
+
  call waitmsg
+
  call clrscr
+  push eax
+  push edx
+  push ecx 
 
 ;Name Input Screen
 mGotoxy 30, 9
-mWrite "Dear Player, Please Enter Your Name : "
-mov edx, OFFSET buffer 
-mov ecx, BUFFER_SIZE 
+mWrite "Dear Player, Please Enter Your Name(11 characters max) : "
+mov edx, OFFSET buffer
+mov ecx, sofname
 call ReadString 
-
 
 
 INVOKE CreateFile,
@@ -1314,20 +1600,16 @@ INVOKE CreateFile,
 	mov fileHandle,eax	
 	INVOKE SetFilePointer,
 	  fileHandle,0,0,FILE_END
-	
-	INVOKE WriteFile, fileHandle, ADDR buffer, bufSize, ADDR bytesWritten, 0
+	INVOKE WriteFile, fileHandle, ADDR buffer,sofname , ADDR bytesWritten, 0
 	INVOKE CloseHandle, fileHandle
 
-QuitNow:
 
 
+ push eax
+ push edx
+  push ecx 
 
-
-
-
-
-
-
+  mov edx,offset buffer
 
 mov eax,yellow
 call setTextcolor
@@ -1337,11 +1619,11 @@ call clrscr
 
 mGotoxy 2, 6
 mWrite "--------------------------------------------------------MENU--------------------------------------------------------"
-mGotoxy 2, 9
+mGotoxy 2, 11
 mWrite "Welcome to Pacman! "
-mGotoxy 2, 10
-mWrite "Choose an option by pressing one of the numbers on your keyboard : "
 mGotoxy 2, 12
+mWrite "Choose an option by pressing one of the numbers on your keyboard : "
+mGotoxy 2, 13
 mWrite "1. Start Game"
 mGotoxy 2, 14
 mWrite "2. Show Scores "
@@ -1378,7 +1660,7 @@ call clrscr
 call clrscr
 mGotoxy 2, 2
 mWrite "-----------------------------------------------------INSTRUCTIONS-----------------------------------------------------"
-mGotoxy 2, 4
+mGotoxy 2, 5
 mWrite "1. use 'W' to move up, 'S' to move down, 'A' to move left, 'D' to move right. "
 mGotoxy 2, 6
 mWrite "2. During gameplay, press 'P' to pause the game and 'r' to re randomize coin's location' "
@@ -1397,13 +1679,13 @@ call clrscr
 mGotoxy 2, 2
 mWrite "-------------------------------------------------------SCORES-------------------------------------------------------"
 mGotoxy 2, 4
-mWrite " "
+mWrite "Muhammad Wissam , Score is 30"
 mGotoxy 2, 6
-mWrite " "
-mgotoxy 20,15
 call waitmsg
+ 
 call clrscr
 call clrscr
+
 boundary_draw:
 
 ;horizontal boundaries
