@@ -6,8 +6,8 @@ includelib winmm.lib
 
 ;todo:
 
-;1. 1st page – Name of game , Name of user (as an input) , 2nd page – Menu ----- 5 marks ,
-;   Pause screen  , Instruction’s screen ----- 2 marks , 3rd page – Game Setup -----3 marks
+;1. 1st page â€“ Name of game , Name of user (as an input) , 2nd page â€“ Menu ----- 5 marks ,
+;   Pause screen  , Instructionâ€™s screen ----- 2 marks , 3rd page â€“ Game Setup -----3 marks
 ;2. Make procedures and use stack calls
 ;3. levels
 ;4. bonus features e.g sound
@@ -17,8 +17,14 @@ PlaySound PROTO, pszSound:PTR BYTE, hmod:DWORD, fdwSound:DWORD
 
 .data  
 ;buffer
+buffer BYTE ?
+bufSize db ?
+errMsg BYTE "Cannot open file",0dh,0ah,0
+filename     BYTE "names.txt",0
+fileHandle   DWORD ?	; handle to output file
+bytesWritten DWORD ?    	; number ofÂ bytesÂ written
 BUFFER_SIZE=501
-buffer db ?
+
 ;sound feature
 sounder BYTE "sounder",0
 SND_ALIAS    DWORD 00010000h
@@ -62,7 +68,7 @@ temp byte ?
 
 ;score
 strScore BYTE "Your score is: ",0
-score BYTE 7
+score BYTE 2
 
 ;player position
 xPos BYTE 20
@@ -415,7 +421,7 @@ jne notCollecting
  
 inc score
 
-;INVOKE PlaySound, OFFSET SoundFileName1, NULL, SND_FILENAME1
+INVOKE PlaySound, OFFSET SoundFileName1, NULL, SND_FILENAME1
     
 ;level number increasing
 cmp lives,0
@@ -466,7 +472,7 @@ jmp continueGameLoop
 
 dec lives
 call updatelifedisplay
-;invoke PlaySound, addr SoundFileName2, 0, SND_FILENAME3
+invoke PlaySound, addr SoundFileName2, 0, SND_FILENAME3
 
 ; Check if score is greater than 0 before decrementing
 cmp score, 0
@@ -591,6 +597,9 @@ eee:
 call ReadChar
 mov inputChar,al
 
+
+;xpos,ypos
+
 ; exit game if user types 'x':
 cmp inputChar,"x"
 je exitGame
@@ -696,12 +705,15 @@ cmp levelno,3
 je lvl3wallsr
 mutr:
 call UpdatePlayer
+mov al, xpos
+cmp al, 57
+
 inc xPos
 call DrawPlayer
 jmp gameLoop
 
 jmp gameLoop
- exitGame:
+ exitGame
 exit
 
 gameloopp endp
@@ -833,7 +845,7 @@ ret
 decrement_score:
  dec lives
  call updatelifedisplay
- ;invoke PlaySound, addr SoundFileName2, 0, SND_FILENAME3
+ invoke PlaySound, addr SoundFileName2, 0, SND_FILENAME3
  
 cmp score, 0
 jle no_decrement
@@ -974,7 +986,7 @@ ret
 decrement_score:
  dec lives
  call updatelifedisplay
- ;invoke PlaySound, addr SoundFileName2, 0, SND_FILENAME3
+ invoke PlaySound, addr SoundFileName2, 0, SND_FILENAME3
  
 cmp score, 0
 jle no_decrement
@@ -1217,7 +1229,7 @@ ret
 decrement_score:
  dec lives
  call updatelifedisplay
- ;invoke PlaySound, addr SoundFileName2, 0, SND_FILENAME3
+ invoke PlaySound, addr SoundFileName2, 0, SND_FILENAME3
  
 cmp score, 0
 jle no_decrement
@@ -1256,7 +1268,7 @@ main PROC
 ;Game Start
 ;-----------------------------------------------------------------------------------------
 ;Starting Screens
-comment @
+;comment @
 call Clrscr
 mov eax,ytog
 call SetTextColor
@@ -1294,6 +1306,28 @@ mWrite "Dear Player, Please Enter Your Name : "
 mov edx, OFFSET buffer 
 mov ecx, BUFFER_SIZE 
 call ReadString 
+
+
+
+INVOKE CreateFile,
+	  ADDR filename, GENERIC_WRITE, DO_NOT_SHARE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0
+	mov fileHandle,eax	
+	INVOKE SetFilePointer,
+	  fileHandle,0,0,FILE_END
+	
+	INVOKE WriteFile, fileHandle, ADDR buffer, bufSize, ADDR bytesWritten, 0
+	INVOKE CloseHandle, fileHandle
+
+QuitNow:
+
+
+
+
+
+
+
+
+
 
 mov eax,yellow
 call setTextcolor
@@ -1370,7 +1404,6 @@ mgotoxy 20,15
 call waitmsg
 call clrscr
 call clrscr
-@
 boundary_draw:
 
 ;horizontal boundaries
